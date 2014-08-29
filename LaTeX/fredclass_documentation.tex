@@ -1,0 +1,640 @@
+\documentclass[11pt,fleqn]{article}
+\renewcommand{\baselinestretch}{1.3}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{hyperref,harvard,amsmath,amssymb,lscape,graphicx,setspace,cancel,amsthm,upquote}
+%\usepackage{amsfonts,latexsym,eurosym}
+\bibliographystyle{aer}
+
+\pdfpagewidth 8.5in
+\pdfpageheight 11in
+\topmargin 0in
+\headheight 0in
+\headsep 0in
+\textheight 9in
+\textwidth 6.5in
+\oddsidemargin 0in
+\evensidemargin 0in
+\headheight 0in
+\headsep 0in
+
+\newcommand{\D}{\displaystyle}
+\newcommand{\E}{\begin{eqnarray*}}
+\newcommand{\F}{\end{eqnarray*}}
+\newcommand{\EE}{\begin{eqnarray}}
+\newcommand{\FF}{\end{eqnarray}}
+\newcommand{\IZ}{\begin{itemize}}
+\newcommand{\ZI}{\end{itemize}}
+\newcommand{\EN}{\begin{enumerate}}
+\newcommand{\NE}{\end{enumerate}}
+\newcommand{\itemc}{\item[$\circ$]}
+\newcommand{\itemb}{\item[]}
+\newcommand{\IZdash}{\begin{itemize} \renewcommand{\labelitemi}{-}}
+
+\newcommand{\ttt}{\texttt}
+\newcommand{\tn}{\textnormal}
+\newcommand{\tc}{\textcolor}
+
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black}
+
+\singlespacing
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\begin{titlepage}
+\title{Documentation for the \ttt{fredclass} Python Module}
+\author{Brian C. Jenkins\thanks{Email: \href{mailto:bcjenkin@uci.edu}{bcjenkin@uci.edu} This project is ongoing and I welcome all feedback. I have no affiliation with the Federal Reserve Bank of St.~Louis or with any other component of the Federal Reserve System.}\\Department of Economics \\University of California, Irvine}
+\date{\today}
+
+\maketitle
+
+\begin{abstract}
+\noindent \ttt{fredclass} is a Python module for retrieving and working with data from the The Federal Reserve Economic Database (FRED). The module makes it easy to download individual data series and provides a set of tools for transforming the data in order to construct plots and perform statistical analysis. The \ttt{fredclass} module is useful for anyone conducting empirical research using the data available from FRED and for anyone, e.g.~economics teachers and journalists, that will benefit from having an efficient and flexible way to access FRED with Python.
+\end{abstract}
+
+\thispagestyle{empty}
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+
+The Federal Reserve Economic Database or FRED is a rich database maintained but the Federal Reserve Bank of St.~Louis.\footnote{Site: \href{http://research.stlouisfed.org/fred2/}{http://research.stlouisfed.org/fred2/}} \verb=fredclass= is a Python module that simplifies the process of downloading and manipulating data from FRED. The module offers a streamlined way of retrieving data directly from the FRED website and provides a number of tools to assist with management of the series obtained. This module is particularly useful for creating Python programs that integrate data retrieval with statistical analysis. The module is also well-suited for use with programs that will update figures and tables as new data are released.
+
+
+\section{Preliminaries}
+
+Currently, a \ttt{fredclass} installation is unavailable. To use the module, download \ttt{fredclass.py} from either my \href{https://github.com/letsgoexploring/fredclass}{Github repository} or from my personal \href{http://www.briancjenkins.com/code/fredclass.html}{website} and place it in the same directory as your Python code. To use \ttt{fredclass}, you must have the following Python modules installed:
+
+\
+
+\begin{tabular}{rl} 
+ $\cdot$ & \ttt{matplotlib}\\
+ $\cdot$ & \ttt{numpy}     \\
+ $\cdot$ & \ttt{scipy}     \\ 
+ $\cdot$ & \ttt{statsmodels}
+\end{tabular}
+
+\subsection{Initialization}
+
+To create a \ttt{fred} instance, you must have the unique Series ID for the data that you wish to retrieve. Generally, you will find this by searching the FRED website for the data series by name. For example, use the FRED site to find that GDPC96 is the Series ID for real GDP of the US (quarterly frequency, seasonally adjusted). Create a \ttt{fred} instance based on this data:
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{>>>\tc{ForestGreen}{from} \tc{RoyalBlue}{fredclass} \tc{ForestGreen}{import} \tc{RoyalBlue}{fred}}
+
+\verb!>>>gdp = fred('GDPC96')!
+\end{minipage}
+
+\
+
+\noindent Now the \ttt{fred} instance \ttt{gdp} is available for manipulation. 
+
+Each \ttt{fred} instance is initialized with a set of attributes that describe the characteristics of the series retrieved from FRED. These attributes are:
+	\IZ
+	\itemb \ttt{title}: Title of the data.
+	\itemb \ttt{source}: Original source of the data.
+	\itemb \ttt{season}: Indicates whether the data has been seasonally adjusted.
+	\itemb \ttt{freq}: Equals 365, 52, 12, 4, or 1 to indicate daily, monthly, quarterly, or annual frequency.
+	\itemb \ttt{units}: Units of the data.
+	\itemb \ttt{daterange}: Date range of data.
+	\itemb \ttt{updated}: Date on which data was last updated.
+	\itemb \ttt{id}: The unique FRED identification code for the series.
+	\itemb \ttt{data}: A list containing the data.
+	\itemb \ttt{dates}: A list containing date strings in yyy-mm-dd format.
+	\itemb \ttt{datenums}: A list containing date numbers to use with the \ttt{date time} module.
+	\ZI
+In terms of the GDP example, find the precise title of data series used by FRED:
+
+\
+
+\begin{minipage}{6.5in}
+\verb!>>> gdp.title!
+
+\verb!'Real Gross Domestic Product, 3 Decimal'!
+\end{minipage}
+
+\
+
+\noindent Or learn that the original source for the data series was the BEA:
+
+\
+
+\begin{minipage}{6.5in}
+\verb!>>> gdp.source!
+
+\verb!'U.S. Department of Commerce: Bureau of Economic Analysis'!
+\end{minipage}
+
+\
+
+\noindent Or find out that quarterly real GDP data goes back to January 1947 and that, as of the time this document was written, the most recent observation was for the quarter beginning April 2014:
+
+\
+
+\begin{minipage}{6.5in}
+\verb!>>> gdp.daterange!
+
+\verb!'Range: 1947-01-01 to 2014-04-01'!
+\end{minipage}
+
+\
+
+\noindent Several of the methods described in the next section will alter the values of the attributes created upon initialization. Furthermore, some methods -- the filtering methods in particular -- add a couple of new attributes as necessary.
+
+\subsection{Methods}
+
+Each \ttt{fred} instance has the following methods:
+
+	\IZ	
+	\itemb \ttt{pc(log=True)}
+		\IZ
+		\itemb Replaces the \ttt{data} attribute with the percentage change of the data series from the pervious time period. If \ttt{log=True}, then percentage changeis computed as the difference between the log of the current value and the log of the one period lag value:
+			\EE
+			100 \times \left[\log(X_t) - \log(X_{t-1})\right].
+			\FF
+		If \ttt{log=False}, then the percentage change is computed in the standard way:
+			\EE
+			100 \times \left[(X_t - X_{t-1})/X_{t-1}\right].
+			\FF
+		Also, method drops the first elements of the \ttt{date} and \ttt{datenums} attributes to account for the shorter observation window. Other attributes modified: \ttt{units} and \ttt{title}.
+		\ZI
+		
+	\itemb \ttt{apc(log=True)}
+		\IZ
+		\itemb Replaces the \ttt{data} attribute with the \emph{annual} percentage change of the data series from the pervious time period. If \ttt{log=True}, then percentage change is computed as the difference between the log of the current value and the log of the one period lag value:
+			\EE
+			100 \times \left[\log(X_t) - \log(X_{t-k})\right],
+			\FF
+		where $k=1,4,12$, or $365$ is the annual frequency of the data series. If \ttt{log=False}, then the percentage change is computed in the standard way:
+			\EE
+			100 \times \left[(X_t - X_{t-k})/X_{t-k}\right].
+			\FF
+		Also, method drops the first $k$ elements of the \ttt{date} and \ttt{datenums} attributes to account for the shorter observation window. Other attributes modified: \ttt{units} and \ttt{title}.
+		\ZI
+	
+	\itemb \ttt{ma(length)}
+		\IZ
+		\itemb Replaces the \ttt{data} attribute with the two-sided moving average with window of size \ttt{length}. If \ttt{length} is not even, the window size is rounded down to the nearest even number. The \ttt{date} and \ttt{datenums} attributes are adjusted from both ends to account for the reduced observation window. Other attributes modified: \ttt{daterange} and \ttt{title}.
+		\ZI
+		
+	\itemb \ttt{replace(new)}
+		\IZ
+		\itemb Replaces the \ttt{data} attribute with a the list \ttt{new}. Prints a warning if the new series has a different length from the original series.
+		\ZI
+		
+	\itemb \ttt{recent(T=10)}
+		\IZ
+		\itemb Constrains data series to the most recent \ttt{T} years. The \ttt{date} and \ttt{datenums} attributes are adjusted from both ends to account for the reduced observation window. Other attributes modified: \ttt{daterange}
+		\ZI
+		
+	\itemb \ttt{window(win)}
+		\IZ
+		\itemb Constrains data series to a specified window. \ttt{win} is a list specifying the minimum and maximum dates to be included. Dates must be in yyyy-mm-dd format. For example, to restrict observations to those between January 1, 1980 to December 31, 1999:
+			\EE
+			\verb!win=['1980-01-01','1999-12-31']!.
+			\FF
+		Other attributes modified: \ttt{daterange}
+		\ZI
+		
+	\itemb \ttt{log()}
+		\IZ
+		\itemb Replaces the \ttt{data} attribute with the log of the data series. Other attributes modified: \ttt{title}
+		\ZI
+		
+	\itemb \ttt{bpfilter()}
+		\IZ
+		\itemb Computes the bandpass (Baxter-King) filter of the series using the \ttt{statsmodels} module. Instead of replacing the modifying the original attributes, this method creates three new attributes:
+			\IZ
+            \itemb \ttt{bpcycle}: cyclical component of series
+            \itemb \ttt{bpdates}: dates corresponding to bp filtered data
+            \itemb \ttt{bpdatenums}: date numbers corresponding to bp filtered data
+            \ZI
+        Method displays a warning if the original series is not quarterly.
+		\ZI
+	
+	\itemb \ttt{hpfilter()}
+		\IZ
+		\itemb Computes the Hodrick-Prescott filter of the series using the \ttt{statsmodels} module. Instead of replacing the modifying the original \ttt{data} attribute, this method creates two new attributes:
+			\IZ
+            \itemb \ttt{hpcycle}: cyclical component of series
+            \itemb \ttt{hptrend}: trend component of series
+            \ZI
+		Method displays a warning if the original series is not quarterly.
+        \ZI
+		
+	\itemb \ttt{cffilter()}
+		\IZ
+		\itemb Computes the Christiano-Fitzgerald filter of the series using the \ttt{statsmodels} module. Instead of replacing the modifying the original \ttt{data} attribute, this method creates two new attributes:
+			\IZ
+            \itemb \ttt{cfcycle}: cyclical component of series
+            \itemb \ttt{cftrend}: trend component of series
+            \ZI
+		Method displays a warning if the original series is not quarterly.
+        \ZI
+	
+	\itemb \ttt{lintrend()}
+		\IZ
+		\itemb Computes the linear trend of the series. Instead of replacing the modifying the original \ttt{data} attribute, this method creates two new attributes:
+			\IZ
+            \itemb \ttt{lincycle}: cyclical component of series
+            \itemb \ttt{lintrend}: trend component of series
+            \ZI
+		Method displays a warning if the original series is not quarterly.
+        \ZI
+		
+	\itemb \ttt{firstdiff()}
+		\IZ
+		\itemb Computes the first-difference of the series. Instead of replacing the modifying the original \ttt{data} attribute, this method creates four new attributes:
+			\IZ
+            \itemb \ttt{diffcycle}: cyclical component of series
+            \itemb \ttt{difftrend}: trend component of series
+            \itemb \ttt{diffdates}: shorter date sequence
+            \itemb \ttt{diffdatenums}: shorter date numbers
+            \itemb \ttt{diffdata}: shorter data series
+            \ZI
+        \ZI
+		
+	\itemb \verb!monthtoquarter(method='AVG')!
+		\IZ
+		\itemb Converts series with monthly frequency to quarterly frequency. Modifies \ttt{data}, \ttt{dates}, \ttt{datenums}, \ttt{t} attributes. If \verb!method='AVG'!, then the value for a quarter is the average over each month of the corresponding three month period. If \verb!method='SUM'!, then the value for a quarter is the sum over the months of the corresponding three month period. And if \verb!method='END'!, then the value for a quarter is value of the last  month of the corresponding three month period. 
+		\ZI		
+		
+	\itemb \verb!quartertoannual(method='AVG')!
+		\IZ
+		\itemb Converts series with quarterly frequency to annual frequency. Modifies \ttt{data}, \ttt{dates}, \ttt{datenums}, \ttt{t} attributes. If \verb!method='AVG'!, then the value for a year is the average over each quarter of the corresponding four quarter period. If \verb!method='SUM'!, then the value for a year is the sum over the quarters of the corresponding four quarter period. And if \verb!method='END'!, then the value for a year is value of the last  quarter of the corresponding four quarter period. 
+		\ZI		
+	
+	\newpage
+	\itemb \verb!monthtoannual(method='AVG')!
+		\IZ
+		\itemb Converts series with monthly frequency to annual frequency. Modifies \ttt{data}, \ttt{dates}, \ttt{datenums}, \ttt{t} attributes. If \verb!method='AVG'!, then the value for a year is the average over each month of the corresponding twelve month period. If \verb!method='SUM'!, then the value for a year is the sum over the months of the corresponding twelve month period. And if \verb!method='END'!, then the value for a year is value of the last  month of the corresponding twelve month period.  
+		\ZI				
+		
+		
+	\itemb \ttt{percapita(pop\_type=1)}
+		\IZ
+		\itemb Replaces the \ttt{data} attribute with the values divided by the US population using one of two definitions of population:
+			\IZ
+            \itemb \ttt{pop\_type=1}: total population US population.
+            \itemb \ttt{pop\_type=2}: civilian noninstitutional population is defined as persons 16 years of age and older.
+			\ZI
+		Other attributes modified: \ttt{title} and \ttt{units}
+		\ZI		
+		
+	\itemb \ttt{recessions()}
+		\IZ
+		\itemb Creates gray recession bars for plots. Should be used after a plot has been made but
+            before either (1) a new plot is created or (2) a show command is issued.
+		\ZI
+	\ZI
+	
+\subsection{Other Functions}
+
+The \verb!fredclass! module is equipped with two functions that are occasionally useful for working with \ttt{fred} objects:
+
+	\IZ
+	\itemb \verb!quickplot(x,year_mult=10,show=True,recess=False,save=False,name='file',width=2)!
+		\IZ
+		\itemb This function produces a plot of the data for a given \ttt{fred} instance \ttt{x}. \verb!year_mult! specifies the multiple in which years on the horizontal axis should be formed. \verb!show=True! means that a new plot window should be created. \verb!recess=False! means that no recession bars should be plotted and \verb!recess=True! means the opposite. If \verb!save=True!, the plot is saved in .png format. \ttt{width} specifies the width of the plotted line.
+		\ZI
+		
+	\itemb \verb!window_equalize(fred_list)!
+		\IZ
+		\itemb Equalizes the data windows for a list of \ttt{fred} instances by finding the largest date range for which there is data available from each series in \verb!fred_list!. 
+		\ZI
+	\ZI
+	
+\section{Examples}
+
+\subsection{Example 1: Plotting with the \ttt{quickplot} function}
+
+
+To begin, let's construct a plot of all currently available data for the US unemployment rate. To do this, we run a script that contains the following:
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{\tc{ForestGreen}{from} \tc{RoyalBlue}{fredclass} \tc{ForestGreen}{import} \tc{RoyalBlue}{fred, quickplot}}
+
+\verb!unemp = fred('UNRATE')!
+
+\verb!quickplot(unemp,recess=True,save=True,name='fredclass_example1')!
+
+\
+
+\end{minipage}
+
+\noindent This program will display a plot and will save the plot to a file called \verb!fredclass_example1.png! in the working directory. The output is depicted in figure \ref{fig:1}. The quick plot function has the advantage of being able to generate plots on the fly, but most of the time you will want to mange plotting directly.
+
+\begin{figure}[h] \caption{\label{fig:1} A plot of the US unemployment rate using the \ttt{quickplot} function.}
+\begin{center}
+\includegraphics[height = 10cm]{fig_fredclass_example1.png}
+\end{center}
+\end{figure}
+
+\subsection{Example 2: Plotting Multiple Series}
+
+Next we will construct a more elaborate plot using the module. The objective is to create a four-panel plot containing the rate of real GDP growth, CPI inflation, the unemployment rate, and the 3-month T-bill rate. Since the available ranges for these series are different, we will make use of the \verb!window_equalize! function to make sure that we plot all four series over the same date range. First, the import statements:
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{\tc{ForestGreen}{from} \tc{RoyalBlue}{\_\_future\_\_} \tc{ForestGreen}{import} \tc{RoyalBlue}{division}}
+
+\ttt{\tc{ForestGreen}{import} \tc{RoyalBlue}{matplotlib.pyplot} \tc{ForestGreen}{as} \tc{RoyalBlue}{plt}}
+
+\ttt{\tc{ForestGreen}{from} \tc{RoyalBlue}{fredclass} \tc{ForestGreen}{import} \tc{RoyalBlue}{fred, window\_equalize}}
+
+\ttt{\tc{ForestGreen}{import} \tc{RoyalBlue}{matplotlib.dates} \tc{ForestGreen}{as} \tc{RoyalBlue}{dts}}
+
+\ttt{\tc{ForestGreen}{from} \tc{RoyalBlue}{datetime} \tc{ForestGreen}{import} \tc{RoyalBlue}{date}}
+
+\
+
+\end{minipage}
+
+\noindent Next, download data from FRED:
+
+\
+
+\begin{minipage}{6.5in}
+\verb!gdp = fred('GDPC96')!
+
+\verb!cpi = fred('CPIAUCSL')!
+
+\verb!unemp=fred('UNRATE')!
+
+\verb!tbill=fred('TB3MS')!
+
+\
+
+\end{minipage}
+
+\noindent Then replace divide gdp data by 1{,}000 to convert units from billions of dollars to trillions of dollars.
+
+\
+
+\begin{minipage}{6.5in}
+
+\ttt{gdp.replace([y/1000 for y in gdp.data ])}
+
+\
+
+\end{minipage}
+
+\noindent Use the \ttt{apc()} method to compute annual growth in real GDP and the CPI. Note that this method computes percentage change \emph{from one year previous}.
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{gdp.apc()}
+
+\ttt{cpi.apc()}
+
+\
+
+\end{minipage}
+
+\noindent Now use the \ttt{window\_equalize} function to set the date ranges to the smallest range common to all four series.
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{series = [gdp,cpi,unemp,tbill]}
+
+\ttt{window\_equalize(series)}
+
+\
+
+\end{minipage}
+
+\noindent Finally, plot the data. Take note of the plot syntax. Use the function \verb!plot_date()! to plot the data of each \ttt{fred}object against its date numbers.
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{fig = plt.figure()}
+
+\ttt{years10  = dts.YearLocator(10)}
+
+\
+\end{minipage}
+
+
+\begin{minipage}{6.5in}
+\ttt{\tc{Magenta}{\# plot real gdp growth}}
+
+\ttt{ax1 = fig.add\_subplot(221)}
+
+\verb!ax1.plot_date(gdp.datenums,gdp.data,'b-',lw = 3)!
+
+\ttt{ax1.xaxis.set\_major\_locator(years10)}
+
+\ttt{ax1.yaxis.set\_major\_formatter(y\_format)}
+
+\verb!ax1.set_ylabel('Trillions of 2009 $')!
+
+\ttt{fig.autofmt\_xdate()}
+
+\ttt{ax1.grid(True)}
+
+\ttt{gdp.recessions()}
+
+\verb!ax1.set_title('Real GDP')!
+
+\
+
+\end{minipage}
+
+\begin{minipage}{6.5in}
+\ttt{\tc{Magenta}{\# plot cpi inflation}}
+
+\ttt{ax2 = fig.add\_subplot(222)}
+
+\verb!ax2.plot_date(cpi.datenums,cpi.data,'b-',lw = 3)!
+
+\ttt{ax2.xaxis.set\_major\_locator(years10)}
+
+\verb!ax2.set_ylabel('Percent')!
+
+\ttt{fig.autofmt\_xdate()}
+
+\ttt{ax2.grid(True)}
+
+\ttt{cpi.recessions()}
+
+\verb!ax2.set_title('CPI Inflation')!
+
+\
+
+\end{minipage}
+
+\begin{minipage}{6.5in}
+\ttt{\tc{Magenta}{\# plot unemployment rate}}
+
+\ttt{ax3 = fig.add\_subplot(223)}
+
+\verb!ax3.plot_date(unemp.datenums,unemp.data,'b-',lw = 3)!
+
+\ttt{ax3.xaxis.set\_major\_locator(years10)}
+
+\verb!ax3.set_ylabel('Percent')!
+
+\ttt{fig.autofmt\_xdate()}
+
+\ttt{ax3.grid(True)}
+
+\ttt{unemp.recessions()}
+
+\verb!ax3.set_title('Unemployment Rate')!
+
+\
+
+\end{minipage}
+
+\begin{minipage}{6.5in}
+\ttt{\tc{Magenta}{\# plot 3-mo T-bill rate}}
+
+\ttt{ax4 = fig.add\_subplot(224)}
+
+\verb!ax4.plot_date(tbill.datenums,tbill.data,'b-',lw = 3)!
+
+\ttt{ax4.xaxis.set\_major\_locator(years10)}
+
+\verb!ax4.set_ylabel('Percent')!
+
+\ttt{fig.autofmt\_xdate()}
+
+\ttt{ax4.grid(True)}
+
+\ttt{tbill.recessions()}
+
+\verb!ax4.set_title('3-mo T-bill Rate')!
+
+\
+
+\verb!plt.savefig('fredclass_example2.png',bbox_inches='tight')!
+
+\ttt{plt.show()}
+
+\
+
+\end{minipage}
+
+\noindent Figure \ref{fig:2} contains the output of this program.
+
+\begin{figure}[h] \caption{\label{fig:2} Plots of real GDP growth, CPI inflation, the unemployment rate and the 3-moth T-bill rate.}
+\begin{center}
+\includegraphics[height = 10cm]{fig_fredclass_example2.png}
+\end{center}
+\end{figure}
+
+
+\subsection{Example 3: Filtering}
+
+In the final example, we will use the Hodrick-Prescott (HP) and the Bandpass (BP) filters to isolate the business cycle components of real US GDP. Specifically, we will filter log per capita real GDP so that the resulting series may be interpreted as the log-deviations from trend.
+
+\
+
+\begin{minipage}{6.5in}
+\ttt{\tc{ForestGreen}{from} \tc{RoyalBlue}{\_\_future\_\_} \tc{ForestGreen}{import} \tc{RoyalBlue}{division}}
+\ttt{\tc{ForestGreen}{import} \tc{RoyalBlue}{matplotlib.pyplot} \tc{ForestGreen}{as} \tc{RoyalBlue}{plt}}
+\ttt{\tc{ForestGreen}{from} fredclass \tc{ForestGreen}{import} \tc{RoyalBlue}{fred, window\_equalize}}
+\ttt{\tc{ForestGreen}{import} \tc{RoyalBlue}{matplotlib.dates} \tc{ForestGreen}{as} \tc{RoyalBlue}{dts}}
+
+\
+
+\end{minipage}
+
+\noindent Then download real GDP data from FRED and convert into units of log thousands of dollars per person.
+
+\
+
+\begin{minipage}{6.5in}
+\verb!gdp = fred('GDPC96')!
+
+\ttt{gdp.percapita()}
+
+\ttt{gdp.replace([y*1000 for y in gdp.data ])}
+
+\ttt{gdp.log()}
+
+\
+
+\end{minipage}
+
+\noindent Apply the filters. Note that the data frequency must be quarterly. Currently, the module is not capable of properly filtering data that has a different frequency.
+
+\
+
+\begin{minipage}{6in}
+\ttt{gdp.bpfilter()}
+
+\ttt{gdp.hpfilter()}
+
+\
+
+\end{minipage}
+
+\noindent Finally, plot the data.
+
+\
+
+\begin{minipage}{6in}
+\ttt{fig = plt.figure()}
+
+\ttt{years10  = dts.YearLocator(10)}
+
+\
+
+\verb!{ax1 = fig.add_subplot(111)!
+
+\verb!ax1.plot_date(gdp.datenums,gdp.hpcycle,'b-',lw = 2)!
+
+\verb!ax1.plot_date(gdp.bpdatenums,gdp.bpcycle,'r--',lw = 2)!
+
+\verb!ax1.xaxis.set_major_locator(years10)!
+
+\verb!ax1.set_ylabel('Percent')!
+
+\verb!fig.autofmt_xdate()!
+
+\ttt{ax1.grid(True)}
+
+\ttt{gdp.recessions()}
+
+\verb!ax1.legend(['HP','BP'],loc='lower right')!
+
+\
+
+\verb!plt.savefig('fredclass_example3.png',bbox_inches='tight')!
+
+\ttt{plt.show()}
+
+\
+
+\end{minipage}
+
+\noindent The output of the program is contained in Figure \ref{fig:3}.
+
+\begin{figure}[h] \caption{\label{fig:3} HP and BP filtered log real GDP per capita.}
+\begin{center}
+\includegraphics[height = 10cm]{fig_fredclass_example3.png}
+\end{center}
+\end{figure}
+
+
+\section{Comments}
+
+The examples above emphasize the ease with which the \ttt{fredclass} module is used for downloading data and making plots. For another example in this spirit, check out my \href{http://youtu.be/34bIQGrndao}{animation} of the US Treasury yield curve. Like all other \ttt{fredclass}-related materials, the code for this animation is also available from my \href{https://github.com/letsgoexploring/fredclass}{Github repository} or from my personal \href{http://www.briancjenkins.com/code/fredclass.html}{website}.
+
+The \ttt{fredclass} module has uses beyond simple data visualization. A researcher conducting statistical analysis using series available from FRED can use the module to create a single Python program -- or set of programs -- that retrieves data from FRED, performs the analysis, and exports to \LaTeX \ tables. Such functionality will reduce the researchers time spent managing data files and will allow the researcher to easily update results as new data become available.
+\end{document}
