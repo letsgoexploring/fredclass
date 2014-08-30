@@ -12,6 +12,6 @@ fredclass is a Python module for easily retrieving and manipulating data series 
   7. **US_Treasury_Yield_Curve_With_Macro_Data.py**: Program for creating a yield curve [animation](http://youtu.be/34bIQGrndao)
   7. **fredclass_example3.py**: Program for example 3 in documentation
   
-Free use of this code is welcome. Please send me comments, feedback, suggestions, etc at. [bcjenkin@uci.edu](mailto:bcjenkin@uci.edu).
+Free use of this code is welcome. Please send me comments, feedback, suggestions, etc. at [bcjenkin@uci.edu](mailto:bcjenkin@uci.edu).
 
 _Updated: August 29, 2014_
