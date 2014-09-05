@@ -9,7 +9,7 @@ fredclass is a Python module for easily retrieving and manipulating data series 
   4. **fredclass_example2.py**: Program for example 2 in documentation
   5. **fredclass_example3.py**: Program for example 3 in documentation
   6. **yield_curve.py**: Program for collecting yield curve data from FRED
-  7. **US_Treasury_Yield_Curve_Animation.py**: Program for creating a yield curve animation. Check out the [output](http://youtu.be/Si8S9onUXHI).
+  7. **US_Treasury_Yield_Curve_Animation.py**: Program for creating a yield curve animation. See the output [here](http://youtu.be/Si8S9onUXHI).
   7. **fredclass_example3.py**: Program for example 3 in documentation
   
 Free use of this code is welcome. Please send me comments, feedback, suggestions, etc. at [bcjenkin@uci.edu](mailto:bcjenkin@uci.edu).
