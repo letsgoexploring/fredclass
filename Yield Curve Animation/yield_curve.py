@@ -1,7 +1,3 @@
-'''This program obtins the yield curve for US government securities on a specified date. 
-
-Created by: Brian C Jenkins. Email comments and suggestions to bcjenkin@uci.edu. Version date: August 29, 2014'''
-
 import fredclass, urllib, dateutil
 import matplotlib.pyplot as plt
 import matplotlib.dates as dts
@@ -9,19 +5,20 @@ import numpy as np
 
 # date example: '1981-01-14'
 
-def yc(date):
+def yc(date,all_yields=None):
 
 	yields=[]
-	y1m= fredclass.fred('DTB4WK')
-	y3m= fredclass.fred('DTB3')
-	y6m= fredclass.fred('DTB6')
-	y1 = fredclass.fred('DGS1')
-	y5 = fredclass.fred('DGS5')
-	y10= fredclass.fred('DGS10')
-	y20= fredclass.fred('DGS20')
-	y30= fredclass.fred('DGS30')
+	if all_yields == None:
+		y1m= fredclass.fred('DTB4WK')
+		y3m= fredclass.fred('DTB3')
+		y6m= fredclass.fred('DTB6')
+		y1 = fredclass.fred('DGS1')
+		y5 = fredclass.fred('DGS5')
+		y10= fredclass.fred('DGS10')
+		y20= fredclass.fred('DGS20')
+		y30= fredclass.fred('DGS30')
 
-	all_yields = [y1m,y3m,y6m,y1,y5,y10,y20,y30] 
+		all_yields = [y1m,y3m,y6m,y1,y5,y10,y20,y30] 
 
 	for n,x in enumerate(all_yields):
 		'''A doc string.'''
