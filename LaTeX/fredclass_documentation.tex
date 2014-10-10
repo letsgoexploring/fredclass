@@ -51,7 +51,7 @@
 \maketitle
 
 \begin{abstract}
-\noindent \ttt{fredclass} is a Python module for retrieving and working with data from the The Federal Reserve Economic Database (FRED). The module makes it easy to download individual data series and provides a set of tools for transforming the data in order to construct plots and perform statistical analysis. The \ttt{fredclass} module is useful for anyone conducting empirical research using the data available from FRED and for anyone, e.g.~economics teachers and journalists, that will benefit from having an efficient and flexible way to access FRED with Python.
+\noindent \ttt{fredclass} is a Python module for retrieving and working with data from Federal Reserve Economic Data (FRED). The module makes it easy to download specific data series and provides a set of tools for transforming the data in order to construct plots and perform statistical analysis. The \ttt{fredclass} module is useful for anyone doing empirical research using the data available from FRED and for anyone, e.g.~economics teachers and journalists, that will benefit from having an efficient and flexible way to access FRED with Python.
 \end{abstract}
 
 \thispagestyle{empty}
@@ -65,7 +65,7 @@
 
 \section{Introduction}
 
-The Federal Reserve Economic Database or FRED is a rich database maintained but the Federal Reserve Bank of St.~Louis.\footnote{Site: \href{http://research.stlouisfed.org/fred2/}{http://research.stlouisfed.org/fred2/}} \verb=fredclass= is a Python module that simplifies the process of downloading and manipulating data from FRED. The module offers a streamlined way of retrieving data directly from the FRED website and provides a number of tools to assist with management of the series obtained. This module is particularly useful for creating Python programs that integrate data retrieval with statistical analysis. The module is also well-suited for use with programs that will update figures and tables as new data are released.
+Federal Reserve Economic Data or FRED is a rich database maintained but the Federal Reserve Bank of St.~Louis.\footnote{Site: \href{http://research.stlouisfed.org/fred2/}{http://research.stlouisfed.org/fred2/}} \verb=fredclass= is a Python module that simplifies the process of downloading and manipulating data from FRED. The module offers a streamlined way of retrieving data directly from the FRED website and provides a number of tools to assist with management of the series obtained. This module is particularly useful for creating Python programs that integrate data retrieval with statistical analysis. The module is also well-suited for use with programs that will update figures and tables as new data are released.
 
 
 \section{Preliminaries}
@@ -636,5 +636,5 @@ In the final example, we will use the Hodrick-Prescott (HP) and the Bandpass (BP
 
 The examples above emphasize the ease with which the \ttt{fredclass} module is used for downloading data and making plots. For another example in this spirit, check out my \href{http://youtu.be/34bIQGrndao}{animation} of the US Treasury yield curve. Like all other \ttt{fredclass}-related materials, the code for this animation is also available from my \href{https://github.com/letsgoexploring/fredclass}{Github repository} or from my personal \href{http://www.briancjenkins.com/code/fredclass.html}{website}.
 
-The \ttt{fredclass} module has uses beyond simple data visualization. A researcher conducting statistical analysis using series available from FRED can use the module to create a single Python program -- or set of programs -- that retrieves data from FRED, performs the analysis, and exports to \LaTeX \ tables. Such functionality will reduce the researchers time spent managing data files and will allow the researcher to easily update results as new data become available.
+The \ttt{fredclass} module has uses beyond simple data visualization. A researcher doing statistical analysis using series available from FRED can use the module to create a single Python program -- or set of programs -- that retrieves data from FRED, performs the analysis, and exports to \LaTeX \ tables. Such functionality will reduce the researchers time spent managing data files and will allow the researcher to easily update results as new data become available.
 \end{document}
