@@ -13,10 +13,7 @@ The files in this directory are used to create the [animation](http://www.brianc
   6. tex files for figures:
     * **fig_slides_012_bank_system_assets.tex**
     * **fig_slides_012_bank_system_liabilities.tex**
-  6. tex files for figures:
-    * **fig_slides_012_bank_system_assets.tex**
-    * **fig_slides_012_bank_system_liabilities.tex**
-  7. tex files for tables:
+  7. tex files for figures:
     * **table_slides_012_bank_system_assets.tex**
     * **table_slides_012_bank_system_balance_sheet.tex**
     * **table_slides_012_bank_system_liabilities.tex**
