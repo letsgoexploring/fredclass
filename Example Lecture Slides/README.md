@@ -19,4 +19,4 @@ The files in this directory are used to create the [animation](http://www.brianc
     * **table_slides_012_bank_system_liabilities.tex**
     * **table_slides_012_bank_system_loans.tex**
 
-  To create the lecture slides from scratch, download all files into the same directory. check the fredclass documentation to make sure that you have all of the required Python modules installed (numpy, statsmodels, etc). Run 012_Bank_Assets_Liabilities.py.
+To create the lecture slides from scratch, download all files into the same directory. check the fredclass documentation to make sure that you have all of the required Python modules installed (numpy, statsmodels, etc). Run 012_Bank_Assets_Liabilities.py.
