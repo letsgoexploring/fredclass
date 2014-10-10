@@ -33,4 +33,5 @@ The files in this directory are used to create the [animation](http://www.brianc
     * **fig_slides_012_bank_system_assets.tex**
     * **fig_slides_012_bank_system_liabilities.tex**
   7. tex files for figures:
+    * **table_slides_012_bank_system_assets.tex**
   
