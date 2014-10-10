@@ -10,10 +10,10 @@ The files in this directory are used to create the [animation](http://www.brianc
   5. Figures created by 012_Bank_Assets_Liabilities.py:
     * **fig_012_bank_assets.png**
     * **fig_012_bank_liabilities.png**
-  6. .tex files for figures:
+  6. tex files for figures:
     * **fig_slides_012_bank_system_assets.tex**
     * **fig_slides_012_bank_system_liabilities.tex**
-  7. .tex files for tables:
+  7. tex files for tables:
     * **table_slides_012_bank_system_assets.tex**
     * **table_slides_012_bank_system_balance_sheet.tex**
     * **table_slides_012_bank_system_liabilities.tex**
