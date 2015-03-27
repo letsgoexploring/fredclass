@@ -15,7 +15,7 @@ Created by: Brian C Jenkins. Email comments and suggestions to bcjenkin@uci.edu.
 import urllib, dateutil, pylab, datetime
 from scipy.signal import lfilter
 import numpy as np
-import scikits.statsmodels.api as sm
+import statsmodels.api as sm
 tsa = sm.tsa
 
 #
@@ -51,7 +51,9 @@ tsa = sm.tsa
 # Aug. 21, 2014: Added:
 #                   1. Added better documentation for everything
 #                   2. Added new attributes for filtering methods.
-#                   
+# Mar. 21, 2015: Added:
+#                   1. Option to pc() method compute percentage change ahead. Default is still backwards
+#                   2. Option to apc() method compute annual percentage change ahead. Default is still backwards
 
 class fred:
 
@@ -109,7 +111,7 @@ class fred:
         self.dates = date
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
 
-    def pc(self,log=True):
+    def pc(self,log=True,method='backward'):
 
         '''Transforms data into percent change'''
         
@@ -119,14 +121,17 @@ class fred:
             pct = [t * 100 * np.log(self.data[k+1]/ self.data[k]) for k in range(T-1)]
         else:
             pct = [t * 100 * (self.data[k+1] - self.data[k]) / self.data[k] for k in range(T-1)]
-        dte = self.dates[1:]    
+        if method=='backward':
+            dte = self.dates[t:]
+        elif method=='forward':
+            dte = self.dates[:T-t]
         self.data  =pct
         self.dates =dte
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
         self.units = 'Percent'
         self.title = 'Percentage Change in '+self.title
 
-    def apc(self,log=True):
+    def apc(self,log=True,method='backward'):
 
         '''Transforms data into percent change from year ago'''
         
@@ -136,7 +141,10 @@ class fred:
             pct = [100 * np.log(self.data[k+t]/ self.data[k]) for k in range(T-t)]
         else:
             pct = [100 * (self.data[k+t] - self.data[k]) / self.data[k] for k in range(T-t)]
-        dte = self.dates[t:]
+        if method=='backward':
+            dte = self.dates[t:]
+        elif method=='forward':
+            dte = self.dates[:T-t]
         self.data  =pct
         self.dates =dte
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
