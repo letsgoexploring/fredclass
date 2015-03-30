@@ -10,14 +10,12 @@ where series_id is the unique Series ID for the FRED data series that is to be r
 
 Module dependencies: matplotlib, numpy, scipy, statsmodels
 
-Created by: Brian C Jenkins. Email comments and suggestions to bcjenkin@uci.edu. Version date: August 22, 2014
-
-'''
+Created by: Brian C Jenkins. Email comments and suggestions to bcjenkin@uci.edu. Version date: August 29, 2014.'''
 
 import urllib, dateutil, pylab, datetime
 from scipy.signal import lfilter
 import numpy as np
-import scikits.statsmodels.api as sm
+import statsmodels.api as sm
 tsa = sm.tsa
 
 #
@@ -53,7 +51,12 @@ tsa = sm.tsa
 # Aug. 21, 2014: Added:
 #                   1. Added better documentation for everything
 #                   2. Added new attributes for filtering methods.
-#                   
+# Mar. 21, 2015: Added:
+#                   1. Option to pc() method compute percentage change ahead. Default is still backwards
+#                   2. Option to apc() method compute annual percentage change ahead. Default is still backwards
+# Mar. 29, 2015: Added:
+#                   1. Changed how per capita is computed. Formerly used average pop. Now has options to use 
+#                       end of period or average
 
 class fred:
 
@@ -111,7 +114,7 @@ class fred:
         self.dates = date
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
 
-    def pc(self,log=True):
+    def pc(self,log=True,method='backward'):
 
         '''Transforms data into percent change'''
         
@@ -121,14 +124,17 @@ class fred:
             pct = [t * 100 * np.log(self.data[k+1]/ self.data[k]) for k in range(T-1)]
         else:
             pct = [t * 100 * (self.data[k+1] - self.data[k]) / self.data[k] for k in range(T-1)]
-        dte = self.dates[1:]    
+        if method=='backward':
+            dte = self.dates[t:]
+        elif method=='forward':
+            dte = self.dates[:T-t]
         self.data  =pct
         self.dates =dte
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
         self.units = 'Percent'
         self.title = 'Percentage Change in '+self.title
 
-    def apc(self,log=True):
+    def apc(self,log=True,method='backward'):
 
         '''Transforms data into percent change from year ago'''
         
@@ -138,7 +144,10 @@ class fred:
             pct = [100 * np.log(self.data[k+t]/ self.data[k]) for k in range(T-t)]
         else:
             pct = [100 * (self.data[k+t] - self.data[k]) / self.data[k] for k in range(T-t)]
-        dte = self.dates[t:]
+        if method=='backward':
+            dte = self.dates[t:]
+        elif method=='forward':
+            dte = self.dates[:T-t]
         self.data  =pct
         self.dates =dte
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
@@ -420,13 +429,16 @@ class fred:
         self.t = 1
 
 
-    def percapita(self,pop_type = 1):
+    def percapita(self,pop_type = 1,method = 'END'):
 
         '''Converts data to per capita (US) using one of two methods:
 
             pop_type == 1 : total population US population
             pop_type != 1 : Civilian noninstitutional population is defined as persons 16 years of
                             age and older
+
+            method == 'AVG': uses average population over the period
+            method != 'AVG': uses end of period population
 
         '''
 
@@ -441,50 +453,25 @@ class fred:
 
         # Generate quarterly population data.
         if self.t == 4:
-            for k in range(1,T2-1):
-                if (populate.datenums[k].month == 2) or (populate.datenums[k].month == 5) or (populate.datenums[k].month == 8) or \
-                (populate.datenums[k].month == 11):
-                    temp_data.append((populate.data[k-1]+populate.data[k]+populate.data[k+1])/3) 
-                    temp_dates.append(populate.dates[k])
+            if method == 'AVG':
+                populate.quartertoannual(method='AVG')
+            else:
+                populate.quartertoannual(method='END')
+            window_equalize([self,populate])
 
         # Generate annual population data.
         if self.t == 1:
-            for k in range(0,T2):
-                if (populate.datenums[k].month == 1) and (len(populate.datenums[k:])>11):
-                    temp_data.append((populate.data[k]+populate.data[k+1]+populate.data[k+2]+populate.data[k+3]+populate.data[k+4]+populate.data[k+5] \
-                        +populate.data[k+6]+populate.data[k+7]+populate.data[k+8]+populate.data[k+9]+populate.data[k+10]+populate.data[k+11])/12) 
-                    temp_dates.append(populate.dates[k])
+            if method == 'AVG':
+                populate.monthtoannual(method='AVG')
+            else:
+                populate.monthtoannual(method='END')
+            window_equalize([self,populate])
 
         if self.t == 12:
-            temp_data  = populate.data
-            temp_dates = populate.dates
+            window_equalize([self,populate])
         
-        # form the population objects.    
-        populate.data     = temp_data
-        populate.dates    = temp_dates
-        populate.datenums = [dateutil.parser.parse(s) for s in populate.dates]
-
-
-        # find the minimum of data window:
-        if populate.datenums[0].date() <= self.datenums[0].date():
-            win_min = self.datenums[0].strftime('%Y-%m-%d')
-        else:
-            win_min = populate.datenums[0].strftime('%Y-%m-%d')
-
-        # find the maximum of data window:
-        if populate.datenums[-1].date() <= self.datenums[-1].date():
-            win_max = populate.datenums[-1].strftime('%Y-%m-%d')
-        else:
-            win_max = self.datenums[-1].strftime('%Y-%m-%d')
-
-        # set data window
-        windo = [win_min,win_max]
-
-        populate.window(windo)
-        self.window(windo)
+        # edit self attributes
         self.data = [a/b for a,b in zip(self.data,populate.data)]
-        # self.dates = temp_dates
-        # self.datenums = [dateutil.parser.parse(s) for s in self.dates]
         self.title = self.title+' Per Capita'
         self.unit = self.units+' Per Thousand People'
 
