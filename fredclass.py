@@ -454,9 +454,9 @@ class fred:
         # Generate quarterly population data.
         if self.t == 4:
             if method == 'AVG':
-                populate.quartertoannual(method='AVG')
+                populate.monthtoquarter(method='AVG')
             else:
-                populate.quartertoannual(method='END')
+                populate.monthtoquarter(method='END')
             window_equalize([self,populate])
 
         # Generate annual population data.
