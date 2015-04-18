@@ -61,7 +61,7 @@ tsa = sm.tsa
 #                   1. Changed how the fred object is initialized so that no id will generate an empty object
 #                 Added functions:
 #                   1. date_numbers(): converts a list of yyy-mm-dd date strings to date numbers
-#                   2. toFRED(): function for creating a FRED object from non-FRED data
+#                   2. toFred(): function for creating a FRED object from non-FRED data
 
 class fred:
 
@@ -709,7 +709,7 @@ def date_numbers(date_strings):
     datenums = [dateutil.parser.parse(s) for s in date_strings]
     return datenums
 
-def toFRED(data,dates,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None,idCode=None,updated=None):
+def toFred(data,dates,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None,idCode=None,updated=None):
     '''function for creating a FRED object from a set of data.'''
     f = fred()
     f.data = data
