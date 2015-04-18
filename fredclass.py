@@ -709,12 +709,16 @@ def date_numbers(date_strings):
     datenums = [dateutil.parser.parse(s) for s in date_strings]
     return datenums
 
-def toFred(data,dates,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None,idCode=None,updated=None):
+def toFred(data,dates,pandasDates=False,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None,idCode=None,updated=None):
     '''function for creating a FRED object from a set of data.'''
     f = fred()
     f.data = data
-    f.dates = dates
-    f.datenums = [dateutil.parser.parse(s) for s in f.dates]
+    if pandasDates==True:
+        f.dates = [ str(d.to_datetime())[0:10] for d in  dates]
+    else:
+        f.dates = dates
+    if type(f.dates[0])==str:
+        f.datenums = [dateutil.parser.parse(s) for s in f.dates]
     f.title = title
     f.t = t
     f.season = season
