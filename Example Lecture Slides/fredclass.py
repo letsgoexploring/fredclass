@@ -57,62 +57,81 @@ tsa = sm.tsa
 # Mar. 29, 2015: Added:
 #                   1. Changed how per capita is computed. Formerly used average pop. Now has options to use 
 #                       end of period or average
+# April 18, 2015: Changed:
+#                   1. Changed how the fred object is initialized so that no id will generate an empty object
+#                 Added functions:
+#                   1. date_numbers(): converts a list of yyy-mm-dd date strings to date numbers
+#                   2. toFRED(): function for creating a FRED object from non-FRED data
 
 class fred:
 
-    def __init__(self,series_id):
+    def __init__(self,series_id=None):
         
-        # download fred series from FRED and save information about the series
-        series_url = "http://research.stlouisfed.org/fred2/data/"
-        series_url = series_url + series_id + '.txt'
-        webs = urllib.urlopen(series_url)
-        raw = [line for line in webs]
+        if series_id == None:
+            self.data = []
+            self.dates = []
+            self.datenums = []
+            self.title = None
+            self.t = None
+            self.season = None
+            self.freq = None
+            self.source = None
+            self.units = None
+            self.daterange = None
+            self.idCode = None
+            self.updated = None
 
-        for k, val in enumerate(raw):
-            if raw[k][0:5] == 'Title':
-                self.title = " ".join(x for x in raw[k].split()[1:])
-            elif raw[k][0:3] == 'Sou':
-                self.source = " ".join(x for x in raw[k].split()[1:])
-            elif raw[k][0:3] == 'Sea':
-                self.season = " ".join(x for x in raw[k].split()[1:])
-            elif raw[k][0:3] == 'Fre':
-                self.freq = " ".join(x for x in raw[k].split()[1:])
-                if self.freq[0:5] == 'Daily':
-                    self.t=365
-                elif self.freq[0:6] == 'Weekly':
-                    self.t=52
-                elif self.freq[0:7] == 'Monthly':
-                    self.t=12
-                elif self.freq[0:9] == 'Quarterly':
-                    self.t=4
-                elif self.freq[0:6] == 'Annual':
-                    self.t=1
-            elif raw[k][0:3] == 'Uni':
-                self.units    = " ".join(x for x in raw[k].split()[1:])
-            elif raw[k][0:3] == 'Dat':
-                self.daterange = " ".join(x for x in raw[k].split()[1:])
-            elif raw[k][0:3] == 'Las':
-                self.updated  = " ".join(x for x in raw[k].split()[1:])
-            elif raw[k][0:3] == 'DAT':
-                raw2 = raw[k+1:]
-                break
+        else:
+            series_url = "http://research.stlouisfed.org/fred2/data/"
+            series_url = series_url + series_id + '.txt'
+            webs = urllib.urlopen(series_url)
+            raw = [line for line in webs]
 
-        # raw2.pop()
-        date=range(len(raw2))
-        data=range(len(raw2))
+            for k, val in enumerate(raw):
+                if raw[k][0:5] == 'Title':
+                    self.title = " ".join(x for x in raw[k].split()[1:])
+                elif raw[k][0:3] == 'Sou':
+                    self.source = " ".join(x for x in raw[k].split()[1:])
+                elif raw[k][0:3] == 'Sea':
+                    self.season = " ".join(x for x in raw[k].split()[1:])
+                elif raw[k][0:3] == 'Fre':
+                    self.freq = " ".join(x for x in raw[k].split()[1:])
+                    if self.freq[0:5] == 'Daily':
+                        self.t=365
+                    elif self.freq[0:6] == 'Weekly':
+                        self.t=52
+                    elif self.freq[0:7] == 'Monthly':
+                        self.t=12
+                    elif self.freq[0:9] == 'Quarterly':
+                        self.t=4
+                    elif self.freq[0:6] == 'Annual':
+                        self.t=1
+                elif raw[k][0:3] == 'Uni':
+                    self.units    = " ".join(x for x in raw[k].split()[1:])
+                elif raw[k][0:3] == 'Dat':
+                    self.daterange = " ".join(x for x in raw[k].split()[1:])
+                elif raw[k][0:3] == 'Las':
+                    self.updated  = " ".join(x for x in raw[k].split()[1:])
+                elif raw[k][0:3] == 'DAT':
+                    raw2 = raw[k+1:]
+                    break
 
-        # Create data for FRED object. Replace missing values with NaN string
-        for k,n in enumerate(raw2):
-            date[k] = raw2[k].split()[0]
-            if raw2[k].split()[1] != '.':
-                data[k] = float(raw2[k].split()[1])
-            else:
-                data[k] = 'NaN'
+            # raw2.pop()
+            date=range(len(raw2))
+            data=range(len(raw2))
 
-        self.id    = series_id
-        self.data  = data
-        self.dates = date
-        self.datenums = [dateutil.parser.parse(s) for s in self.dates]
+            # Create data for FRED object. Replace missing values with NaN string
+            for k,n in enumerate(raw2):
+                date[k] = raw2[k].split()[0]
+                if raw2[k].split()[1] != '.':
+                    data[k] = float(raw2[k].split()[1])
+                else:
+                    data[k] = 'NaN'
+
+            self.id    = series_id
+            self.data  = data
+            self.dates = date
+            self.datenums = [dateutil.parser.parse(s) for s in self.dates]
 
     def pc(self,log=True,method='backward'):
 
@@ -683,3 +702,26 @@ def window_equalize(fred_list):
     windo = [win_min,win_max]
     for x in fred_list:
         x.window(windo)
+
+def date_numbers(date_strings):
+
+    '''Converts a list of date strings in yyy-mm-dd format to date numbers.'''
+    datenums = [dateutil.parser.parse(s) for s in date_strings]
+    return datenums
+
+def toFRED(data,dates,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None,idCode=None,updated=None):
+    '''function for creating a FRED object from a set of data.'''
+    f = fred()
+    f.data = data
+    f.dates = dates
+    f.datenums = [dateutil.parser.parse(s) for s in f.dates]
+    f.title = title
+    f.t = t
+    f.season = season
+    f.freq = freq
+    f.source = source
+    f.units = units
+    f.daterange = daterange
+    f.idCode = idCode
+    f.updated = updated
+    return f
