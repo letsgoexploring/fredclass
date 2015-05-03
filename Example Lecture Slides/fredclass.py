@@ -173,18 +173,26 @@ class fred:
         self.units = 'Percent'
         self.title = 'Annual Percentage Change in '+self.title
 
-    def ma(self,length):
+    def ma(self,length,twoSided=True):
 
         '''Transforms data into a moving average of a specified length'''
         
         T = len(self.data)
-        self.data = lfilter(np.ones(length)/length, 1, self.data)[length:]
-        # self.dates =self.dates[length:]
-        self.dates =self.dates[length/2:-length/2]
-        self.datenums = [dateutil.parser.parse(s) for s in self.dates]
-        self.daterange = self.dates[0]+' to '+self.dates[-1]
-        self.title = 'Moving average of '+self.title
-
+        if twoSided==True:
+            self.data = lfilter(np.ones(length)/length, 1, self.data)[length:]
+            self.dates =self.dates[length/2:-length/2]
+            self.datenums = [dateutil.parser.parse(s) for s in self.dates]
+            self.daterange = self.dates[0]+' to '+self.dates[-1]
+            self.title = 'Moving average of '+self.title
+        else:
+            ma = []
+            for t in range(T-length+1):
+                ma.append(np.mean(self.data[t:t+length-1]))
+            self.data = ma
+            self.dates =self.dates[length-1:]
+            self.datenums = [dateutil.parser.parse(s) for s in self.dates]
+            self.daterange = self.dates[0]+' to '+self.dates[-1]
+            self.title = 'One-sided moving average of '+self.title
     
     def replace(self,new):
 
