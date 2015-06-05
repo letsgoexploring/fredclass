@@ -54,99 +54,84 @@ tsa = sm.tsa
 # Mar. 21, 2015: Added:
 #                   1. Option to pc() method compute percentage change ahead. Default is still backwards
 #                   2. Option to apc() method compute annual percentage change ahead. Default is still backwards
-# Mar. 29, 2015: Added:
-#                   1. Changed how per capita is computed. Formerly used average pop. Now has options to use 
-#                       end of period or average
-# April 18, 2015: Changed:
-#                   1. Changed how the fred object is initialized so that no id will generate an empty object
-#                 Added functions:
-#                   1. date_numbers(): converts a list of yyy-mm-dd date strings to date numbers
-#                   2. toFred(): function for creating a FRED object from non-FRED data
+#
+# Jun. 5, 2015: Updated:
+#                   1. Changed how dates for .pc() method are adjusted so that the length of dates corresponds to length of data
+#                   2. Created an option for annualizing percentage change data
+#                   3. Added options for setting filtering parameters for BP, HP, CF filters
 
 class fred:
 
-    def __init__(self,series_id=None):
+    def __init__(self,series_id):
         
-        if series_id == None:
-            self.data = []
-            self.dates = []
-            self.datenums = []
-            self.title = None
-            self.t = None
-            self.season = None
-            self.freq = None
-            self.source = None
-            self.units = None
-            self.daterange = None
-            self.idCode = None
-            self.updated = None
+        # download fred series from FRED and save information about the series
+        series_url = "http://research.stlouisfed.org/fred2/data/"
+        series_url = series_url + series_id + '.txt'
+        webs = urllib.urlopen(series_url)
+        raw = [line for line in webs]
 
-        else:
-            series_url = "http://research.stlouisfed.org/fred2/data/"
-            series_url = series_url + series_id + '.txt'
-            webs = urllib.urlopen(series_url)
-            raw = [line for line in webs]
+        for k, val in enumerate(raw):
+            if raw[k][0:5] == 'Title':
+                self.title = " ".join(x for x in raw[k].split()[1:])
+            elif raw[k][0:3] == 'Sou':
+                self.source = " ".join(x for x in raw[k].split()[1:])
+            elif raw[k][0:3] == 'Sea':
+                self.season = " ".join(x for x in raw[k].split()[1:])
+            elif raw[k][0:3] == 'Fre':
+                self.freq = " ".join(x for x in raw[k].split()[1:])
+                if self.freq[0:5] == 'Daily':
+                    self.t=365
+                elif self.freq[0:6] == 'Weekly':
+                    self.t=52
+                elif self.freq[0:7] == 'Monthly':
+                    self.t=12
+                elif self.freq[0:9] == 'Quarterly':
+                    self.t=4
+                elif self.freq[0:6] == 'Annual':
+                    self.t=1
+            elif raw[k][0:3] == 'Uni':
+                self.units    = " ".join(x for x in raw[k].split()[1:])
+            elif raw[k][0:3] == 'Dat':
+                self.daterange = " ".join(x for x in raw[k].split()[1:])
+            elif raw[k][0:3] == 'Las':
+                self.updated  = " ".join(x for x in raw[k].split()[1:])
+            elif raw[k][0:3] == 'DAT':
+                raw2 = raw[k+1:]
+                break
 
-            for k, val in enumerate(raw):
-                if raw[k][0:5] == 'Title':
-                    self.title = " ".join(x for x in raw[k].split()[1:])
-                elif raw[k][0:3] == 'Sou':
-                    self.source = " ".join(x for x in raw[k].split()[1:])
-                elif raw[k][0:3] == 'Sea':
-                    self.season = " ".join(x for x in raw[k].split()[1:])
-                elif raw[k][0:3] == 'Fre':
-                    self.freq = " ".join(x for x in raw[k].split()[1:])
-                    if self.freq[0:5] == 'Daily':
-                        self.t=365
-                    elif self.freq[0:6] == 'Weekly':
-                        self.t=52
-                    elif self.freq[0:7] == 'Monthly':
-                        self.t=12
-                    elif self.freq[0:9] == 'Quarterly':
-                        self.t=4
-                    elif self.freq[0:6] == 'Annual':
-                        self.t=1
-                elif raw[k][0:3] == 'Uni':
-                    self.units    = " ".join(x for x in raw[k].split()[1:])
-                elif raw[k][0:3] == 'Dat':
-                    self.daterange = " ".join(x for x in raw[k].split()[1:])
-                elif raw[k][0:3] == 'Las':
-                    self.updated  = " ".join(x for x in raw[k].split()[1:])
-                elif raw[k][0:3] == 'DAT':
-                    raw2 = raw[k+1:]
-                    break
+        # raw2.pop()
+        date=range(len(raw2))
+        data=range(len(raw2))
 
-            # raw2.pop()
-            date=range(len(raw2))
-            data=range(len(raw2))
+        # Create data for FRED object. Replace missing values with NaN string
+        for k,n in enumerate(raw2):
+            date[k] = raw2[k].split()[0]
+            if raw2[k].split()[1] != '.':
+                data[k] = float(raw2[k].split()[1])
+            else:
+                data[k] = 'NaN'
 
-            # Create data for FRED object. Replace missing values with NaN string
-            for k,n in enumerate(raw2):
-                date[k] = raw2[k].split()[0]
-                if raw2[k].split()[1] != '.':
-                    data[k] = float(raw2[k].split()[1])
-                else:
-                    data[k] = 'NaN'
+        self.id    = series_id
+        self.data  = data
+        self.dates = date
+        self.datenums = [dateutil.parser.parse(s) for s in self.dates]
 
-            self.id    = series_id
-            self.data  = data
-            self.dates = date
-            self.datenums = [dateutil.parser.parse(s) for s in self.dates]
-
-    def pc(self,log=True,method='backward'):
+    def pc(self,log=True,method='backward',annualize=False):
 
         '''Transforms data into percent change'''
         
         T = len(self.data)
         t = self.t
         if log==True:
-            pct = [t * 100 * np.log(self.data[k+1]/ self.data[k]) for k in range(T-1)]
+            pct = [100 * np.log(self.data[k+1]/ self.data[k]) for k in range(T-1)]
         else:
-            pct = [t * 100 * (self.data[k+1] - self.data[k]) / self.data[k] for k in range(T-1)]
+            pct = [100 * (self.data[k+1] - self.data[k]) / self.data[k] for k in range(T-1)]
+        if annualize==True:
+            pct = [t*x for x in pct]
         if method=='backward':
-            dte = self.dates[t:]
+            dte = self.dates[1:]
         elif method=='forward':
-            dte = self.dates[:T-t]
+            dte = self.dates[:-1]
         self.data  =pct
         self.dates =dte
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
@@ -173,26 +158,18 @@ class fred:
         self.units = 'Percent'
         self.title = 'Annual Percentage Change in '+self.title
 
-    def ma(self,length,twoSided=True):
+    def ma(self,length):
 
         '''Transforms data into a moving average of a specified length'''
         
         T = len(self.data)
-        if twoSided==True:
-            self.data = lfilter(np.ones(length)/length, 1, self.data)[length:]
-            self.dates =self.dates[length/2:-length/2]
-            self.datenums = [dateutil.parser.parse(s) for s in self.dates]
-            self.daterange = self.dates[0]+' to '+self.dates[-1]
-            self.title = 'Moving average of '+self.title
-        else:
-            ma = []
-            for t in range(T-length+1):
-                ma.append(np.mean(self.data[t:t+length-1]))
-            self.data = ma
-            self.dates =self.dates[length-1:]
-            self.datenums = [dateutil.parser.parse(s) for s in self.dates]
-            self.daterange = self.dates[0]+' to '+self.dates[-1]
-            self.title = 'One-sided moving average of '+self.title
+        self.data = lfilter(np.ones(length)/length, 1, self.data)[length:]
+        # self.dates =self.dates[length:]
+        self.dates =self.dates[length/2:-length/2]
+        self.datenums = [dateutil.parser.parse(s) for s in self.dates]
+        self.daterange = self.dates[0]+' to '+self.dates[-1]
+        self.title = 'Moving average of '+self.title
+
     
     def replace(self,new):
 
@@ -258,7 +235,7 @@ class fred:
         self.units= 'log '+self.units
         self.title = 'Log '+self.title
 
-    def bpfilter(self):
+    def bpfilter(self,low=6,high=32,K=12):
 
         '''Computes the bandpass (Baxter-King) filter of the series. Adds attributes:
 
@@ -268,13 +245,16 @@ class fred:
 
         '''
 
-        if self.t !=4:
+        if low==6 and high==32 and K==12 and self.t !=4:
             print 'Warning: data frequency is not quarterly!'
-        self.bpcycle = tsa.filters.bkfilter(self.data)
-        self.bpdates = self.dates[12:-12]
+        elif low==3 and high==8 and K==1.5 and self.t !=1:
+            print 'Warning: data frequency is not annual!'
+            
+        self.bpcycle = tsa.filters.bkfilter(self.data,low=low,high=high,K=K)
+        self.bpdates = self.dates[K:-K]
         self.bpdatenums = [dateutil.parser.parse(s) for s in self.bpdates]
         
-    def hpfilter(self):
+    def hpfilter(self,lamb=1600):
 
         '''Computes the Hodrick-Prescott filter of original series. Adds attributes:
 
@@ -282,12 +262,17 @@ class fred:
             self.hptrend : trend component of series
 
         '''
-
-        if self.t !=4:
+        
+        if lamb==1600 and self.t !=4:
             print 'Warning: data frequency is not quarterly!'
+        elif lamb==129600 and self.t !=12:
+            print 'Warning: data frequency is not monthly!'
+        elif lamb==6.25 and self.t !=1:
+            print 'Warning: data frequency is not annual!'
+            
         self.hpcycle, self.hptrend = tsa.filters.hpfilter(self.data)
 
-    def cffilter(self):
+    def cffilter(self,low=6,high=32,drift=True):
 
         '''Computes the Christiano-Fitzgerald filter of original series. Adds attributes:
 
@@ -296,7 +281,9 @@ class fred:
 
         '''
 
-        if self.t !=4:
+        if low==6 and high==32 and self.t !=4:
+            print 'Warning: data frequency is not quarterly!'
+        elif low==1.5 and high==8 and self.t !=4:
             print 'Warning: data frequency is not quarterly!'
         self.cffcycle, self.cfftrend = tsa.filters.cffilter(self.data)
 
@@ -456,16 +443,13 @@ class fred:
         self.t = 1
 
 
-    def percapita(self,pop_type = 1,method = 'END'):
+    def percapita(self,pop_type = 1):
 
         '''Converts data to per capita (US) using one of two methods:
 
             pop_type == 1 : total population US population
             pop_type != 1 : Civilian noninstitutional population is defined as persons 16 years of
                             age and older
-
-            method == 'AVG': uses average population over the period
-            method != 'AVG': uses end of period population
 
         '''
 
@@ -480,25 +464,50 @@ class fred:
 
         # Generate quarterly population data.
         if self.t == 4:
-            if method == 'AVG':
-                populate.monthtoquarter(method='AVG')
-            else:
-                populate.monthtoquarter(method='END')
-            window_equalize([self,populate])
+            for k in range(1,T2-1):
+                if (populate.datenums[k].month == 2) or (populate.datenums[k].month == 5) or (populate.datenums[k].month == 8) or \
+                (populate.datenums[k].month == 11):
+                    temp_data.append((populate.data[k-1]+populate.data[k]+populate.data[k+1])/3) 
+                    temp_dates.append(populate.dates[k])
 
         # Generate annual population data.
         if self.t == 1:
-            if method == 'AVG':
-                populate.monthtoannual(method='AVG')
-            else:
-                populate.monthtoannual(method='END')
-            window_equalize([self,populate])
+            for k in range(0,T2):
+                if (populate.datenums[k].month == 1) and (len(populate.datenums[k:])>11):
+                    temp_data.append((populate.data[k]+populate.data[k+1]+populate.data[k+2]+populate.data[k+3]+populate.data[k+4]+populate.data[k+5] \
+                        +populate.data[k+6]+populate.data[k+7]+populate.data[k+8]+populate.data[k+9]+populate.data[k+10]+populate.data[k+11])/12) 
+                    temp_dates.append(populate.dates[k])
 
         if self.t == 12:
-            window_equalize([self,populate])
+            temp_data  = populate.data
+            temp_dates = populate.dates
         
-        # edit self attributes
+        # form the population objects.    
+        populate.data     = temp_data
+        populate.dates    = temp_dates
+        populate.datenums = [dateutil.parser.parse(s) for s in populate.dates]
+
+
+        # find the minimum of data window:
+        if populate.datenums[0].date() <= self.datenums[0].date():
+            win_min = self.datenums[0].strftime('%Y-%m-%d')
+        else:
+            win_min = populate.datenums[0].strftime('%Y-%m-%d')
+
+        # find the maximum of data window:
+        if populate.datenums[-1].date() <= self.datenums[-1].date():
+            win_max = populate.datenums[-1].strftime('%Y-%m-%d')
+        else:
+            win_max = self.datenums[-1].strftime('%Y-%m-%d')
+
+        # set data window
+        windo = [win_min,win_max]
+
+        populate.window(windo)
+        self.window(windo)
         self.data = [a/b for a,b in zip(self.data,populate.data)]
+        # self.dates = temp_dates
+        # self.datenums = [dateutil.parser.parse(s) for s in self.dates]
         self.title = self.title+' Per Capita'
         self.unit = self.units+' Per Thousand People'
 
@@ -546,7 +555,7 @@ class fred:
         '1861-06-01',
         '1867-12-01',
         '1870-12-01',
-        '1879-03-01',
+        '1897-03-01',
         '1885-05-01',
         '1888-04-01',
         '1891-05-01',
@@ -710,30 +719,3 @@ def window_equalize(fred_list):
     windo = [win_min,win_max]
     for x in fred_list:
         x.window(windo)
-
-def date_numbers(date_strings):
-
-    '''Converts a list of date strings in yyy-mm-dd format to date numbers.'''
-    datenums = [dateutil.parser.parse(s) for s in date_strings]
-    return datenums
-
-def toFred(data,dates,pandasDates=False,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None,idCode=None,updated=None):
-    '''function for creating a FRED object from a set of data.'''
-    f = fred()
-    f.data = data
-    if pandasDates==True:
-        f.dates = [ str(d.to_datetime())[0:10] for d in  dates]
-    else:
-        f.dates = dates
-    if type(f.dates[0])==str:
-        f.datenums = [dateutil.parser.parse(s) for s in f.dates]
-    f.title = title
-    f.t = t
-    f.season = season
-    f.freq = freq
-    f.source = source
-    f.units = units
-    f.daterange = daterange
-    f.idCode = idCode
-    f.updated = updated
-    return f
