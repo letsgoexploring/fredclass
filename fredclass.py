@@ -59,6 +59,7 @@ tsa = sm.tsa
 #                   1. Changed how dates for .pc() method are adjusted so that the length of dates corresponds to length of data
 #                   2. Created an option for annualizing percentage change data
 #                   3. Added options for setting filtering parameters for BP, HP, CF filters
+#                   4. Additional functions toFred() and date_numbers()
 
 class fred:
 
@@ -719,3 +720,30 @@ def window_equalize(fred_list):
     windo = [win_min,win_max]
     for x in fred_list:
         x.window(windo)
+        
+def date_numbers(date_strings):
+
+    '''Converts a list of date strings in yyy-mm-dd format to date numbers.'''
+    datenums = [dateutil.parser.parse(s) for s in date_strings]
+    return datenums
+
+def toFred(data,dates,pandasDates=False,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None, idCode=None,updated=None):
+    '''function for creating a FRED object from a set of data.'''
+    f = fred()
+    f.data = data
+    if pandasDates==True:
+        f.dates = [ str(d.to_datetime())[0:10] for d in  dates]
+    else:
+        f.dates = dates
+    if type(f.dates[0])==str:
+        f.datenums = [dateutil.parser.parse(s) for s in f.dates]
+    f.title = title
+    f.t = t
+    f.season = season
+    f.freq = freq
+    f.source = source
+    f.units = units
+    f.daterange = daterange
+    f.idCode = idCode
+    f.updated = updated
+    return f
