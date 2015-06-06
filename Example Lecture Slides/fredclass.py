@@ -263,7 +263,8 @@ class fred:
             self.hptrend : trend component of series
 
         '''
-        
+        if lamb==160:
+            print 'fuck'
         if lamb==1600 and self.t !=4:
             print 'Warning: data frequency is not quarterly!'
         elif lamb==129600 and self.t !=12:
@@ -271,7 +272,7 @@ class fred:
         elif lamb==6.25 and self.t !=1:
             print 'Warning: data frequency is not annual!'
             
-        self.hpcycle, self.hptrend = tsa.filters.hpfilter(self.data)
+        self.hpcycle, self.hptrend = tsa.filters.hpfilter(self.data,lamb=lamb)
 
     def cffilter(self,low=6,high=32,drift=True):
 
@@ -286,7 +287,7 @@ class fred:
             print 'Warning: data frequency is not quarterly!'
         elif low==1.5 and high==8 and self.t !=4:
             print 'Warning: data frequency is not quarterly!'
-        self.cffcycle, self.cfftrend = tsa.filters.cffilter(self.data)
+        self.cffcycle, self.cfftrend = tsa.filters.cffilter(self.data,low=low, high=high, drift=drift)
 
     def lintrend(self):
 
