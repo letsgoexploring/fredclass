@@ -730,7 +730,7 @@ def date_numbers(date_strings):
 
 def toFred(data,dates,pandasDates=False,title=None,t=None,season=None,freq=None,source=None,units=None,daterange=None, idCode=None,updated=None):
     '''function for creating a FRED object from a set of data.'''
-    f = fred()
+    f = fred('UNRATE')
     f.data = data
     if pandasDates==True:
         f.dates = [ str(d.to_datetime())[0:10] for d in  dates]
