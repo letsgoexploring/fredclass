@@ -181,7 +181,7 @@ class fred:
             print('New series and original have different lengths!')
         self.data = new
 
-    def recent(self,T=10):
+    def recent(self,lag=10):
         '''lag is the number of obs to include in the window'''
         t = self.t
         self.data  =self.data[-lag * t:]
@@ -263,8 +263,6 @@ class fred:
             self.hptrend : trend component of series
 
         '''
-        if lamb==160:
-            print 'fuck'
         if lamb==1600 and self.t !=4:
             print 'Warning: data frequency is not quarterly!'
         elif lamb==129600 and self.t !=12:

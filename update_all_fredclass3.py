@@ -8,18 +8,18 @@ import os, shutil
 Obviously, use at your own risk.'''
 
 
-orig_path = os.getcwd()+'fredclass.py'
+orig_path = os.getcwd()+'fredclass3.py'
 user = orig_path.split("/")[2]
 
 drop_path = '/Users/'+user+'/Dropbox'
 desk_path = '/Users/'+user+'/Desktop'
-orig_path = os.getcwd()+'/fredclass.py'
+orig_path = os.getcwd()+'/fredclass3.py'
 
 i = 0
 for (path, dirs, files) in os.walk(drop_path):
 
     for f in files:
-    	if f=='fredclass.py' and path.lower() != os.getcwd().lower():
+    	if f=='fredclass3.py' and path.lower() != os.getcwd().lower():
     		print(path)
     		# print files
     		shutil.copy(orig_path,path)
@@ -29,7 +29,7 @@ for (path, dirs, files) in os.walk(drop_path):
 for (path, dirs, files) in os.walk(desk_path):
 
     for f in files:
-    	if f=='fredclass.py':
+    	if f=='fredclass3.py':
     		print(path)
     		# print files
     		shutil.copy(orig_path,path)
