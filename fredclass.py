@@ -10,7 +10,9 @@ where series_id is the unique Series ID for the FRED data series that is to be r
 
 Module dependencies: matplotlib, numpy, scipy, statsmodels
 
-Created by: Brian C Jenkins. Email comments and suggestions to bcjenkin@uci.edu. Version date: August 29, 2014.'''
+Created by: Brian C Jenkins. Email comments and suggestions to bcjenkin@uci.edu. Version date: August 29, 2014.
+    
+For Python 3.4'''
 
 import urllib, dateutil, pylab, datetime
 from scipy.signal import lfilter
@@ -60,6 +62,7 @@ tsa = sm.tsa
 #                   2. Created an option for annualizing percentage change data
 #                   3. Added options for setting filtering parameters for BP, HP, CF filters
 #                   4. Additional functions toFred() and date_numbers()
+# Jun. 23, 2015: Added line ensuring compatibility for Python 3 with urllib
 
 class fred:
 
@@ -68,8 +71,11 @@ class fred:
         # download fred series from FRED and save information about the series
         series_url = "http://research.stlouisfed.org/fred2/data/"
         series_url = series_url + series_id + '.txt'
-        webs = urllib.urlopen(series_url)
-        raw = [line for line in webs]
+        try:
+            webs = urllib.request.urlopen(series_url)
+        except:
+            webs = urllib.urlopen(series_url)
+        raw = [line.decode('utf-8') for line in webs]
 
         for k, val in enumerate(raw):
             if raw[k][0:5] == 'Title':
@@ -97,12 +103,12 @@ class fred:
             elif raw[k][0:3] == 'Las':
                 self.updated  = " ".join(x for x in raw[k].split()[1:])
             elif raw[k][0:3] == 'DAT':
-                raw2 = raw[k+1:]
+                raw2 = list(raw[k+1:])
                 break
 
         # raw2.pop()
-        date=range(len(raw2))
-        data=range(len(raw2))
+        date=list(range(len(raw2)))
+        data=list(range(len(raw2)))
 
         # Create data for FRED object. Replace missing values with NaN string
         for k,n in enumerate(raw2):
@@ -166,7 +172,7 @@ class fred:
         T = len(self.data)
         self.data = lfilter(np.ones(length)/length, 1, self.data)[length:]
         # self.dates =self.dates[length:]
-        self.dates =self.dates[length/2:-length/2]
+        self.dates =self.dates[int(length/2):-int(length/2)]
         self.datenums = [dateutil.parser.parse(s) for s in self.dates]
         self.daterange = self.dates[0]+' to '+self.dates[-1]
         self.title = 'Moving average of '+self.title
@@ -247,9 +253,9 @@ class fred:
         '''
 
         if low==6 and high==32 and K==12 and self.t !=4:
-            print 'Warning: data frequency is not quarterly!'
+            print('Warning: data frequency is not quarterly!')
         elif low==3 and high==8 and K==1.5 and self.t !=1:
-            print 'Warning: data frequency is not annual!'
+            print('Warning: data frequency is not annual!')
             
         self.bpcycle = tsa.filters.bkfilter(self.data,low=low,high=high,K=K)
         self.bpdates = self.dates[K:-K]
@@ -264,11 +270,11 @@ class fred:
 
         '''
         if lamb==1600 and self.t !=4:
-            print 'Warning: data frequency is not quarterly!'
+            print('Warning: data frequency is not quarterly!')
         elif lamb==129600 and self.t !=12:
-            print 'Warning: data frequency is not monthly!'
+            print('Warning: data frequency is not monthly!')
         elif lamb==6.25 and self.t !=1:
-            print 'Warning: data frequency is not annual!'
+            print('Warning: data frequency is not annual!')
             
         self.hpcycle, self.hptrend = tsa.filters.hpfilter(self.data,lamb=lamb)
 
@@ -282,9 +288,9 @@ class fred:
         '''
 
         if low==6 and high==32 and self.t !=4:
-            print 'Warning: data frequency is not quarterly!'
+            print('Warning: data frequency is not quarterly!')
         elif low==1.5 and high==8 and self.t !=4:
-            print 'Warning: data frequency is not quarterly!'
+            print('Warning: data frequency is not quarterly!')
         self.cffcycle, self.cfftrend = tsa.filters.cffilter(self.data,low=low, high=high, drift=drift)
 
     def lintrend(self):
@@ -340,7 +346,7 @@ class fred:
         '''
 
         if self.t !=12:
-            print 'Warning: data frequency is not monthly!'
+            print('Warning: data frequency is not monthly!')
         T = len(self.data)
         temp_data = self.data[0:0]
         temp_dates = self.datenums[0:0]
@@ -375,7 +381,7 @@ class fred:
         '''
 
         if self.t !=4:
-            print 'Warning: data frequency is not quarterly!'
+            print('Warning: data frequency is not quarterly!')
         T = len(self.data)
         temp_data = self.data[0:0]
         temp_dates = self.datenums[0:0]
@@ -413,7 +419,7 @@ class fred:
         '''
 
         if self.t !=12:
-            print 'Warning: data frequency is not monthly!'
+            print('Warning: data frequency is not monthly!')
         T = len(self.data)
         temp_data = self.data[0:0]
         temp_dates = self.datenums[0:0]
